@@ -1,12 +1,13 @@
-import serverless from 'serverless-http';
 import { ensureApp } from '../backend/src/app';
 
-let handler: any;
-
-export default async function(req: any, res: any) {
-  if (!handler) {
+export default async function handler(req: any, res: any) {
+  try {
     const app = await ensureApp();
-    handler = serverless(app);
+    app(req, res);
+  } catch (err) {
+    console.error('Error:', err);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: ' Internal Server Error' }));
   }
-  return handler(req, res);
 }

@@ -37,7 +37,24 @@ export function getDatabaseSync(): Client {
 
 async function initializeSchema(): Promise<void> {
   const db = client!;
-  const schemaPath = path.resolve(__dirname, 'schema.sql');
+  const possiblePaths = [
+    path.resolve(__dirname, 'schema.sql'),
+    path.resolve(__dirname, '..', '..', '..', 'backend', 'src', 'db', 'schema.sql'),
+    path.join(process.cwd(), 'backend', 'src', 'db', 'schema.sql'),
+  ];
+
+  let schemaPath = '';
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      schemaPath = p;
+      break;
+    }
+  }
+
+  if (!schemaPath) {
+    throw new Error(`Cannot find schema.sql. Tried: ${possiblePaths.join(', ')}`);
+  }
+
   const schema = fs.readFileSync(schemaPath, 'utf-8');
 
   const statements = schema
