@@ -23,8 +23,8 @@ export async function list(
     from?: string;
     to?: string;
     sourceId?: number;
-    page: number;
-    limit: number;
+    page?: number;
+    limit?: number;
   }
 ): Promise<PaginatedResponse<Income>> {
   const db = await getDatabase();
@@ -53,18 +53,20 @@ export async function list(
   });
   const total = Number(countResult.rows[0]?.['total'] ?? 0);
 
-  const offset = (params.page - 1) * params.limit;
+  const page = params.page ?? 1;
+  const limit = params.limit ?? 20;
+  const offset = (page - 1) * limit;
   const rowsResult = await db.execute({
     sql: `SELECT i.* FROM incomes i WHERE ${where} ORDER BY i.received_at DESC, i.created_at DESC LIMIT ? OFFSET ?`,
-    args: [...queryParams, params.limit, offset],
+    args: [...queryParams, limit, offset],
   });
 
   const items = rowsResult.rows.map(rowToIncome);
 
   return {
     items,
-    page: params.page,
-    limit: params.limit,
+    page,
+    limit,
     total,
   };
 }
